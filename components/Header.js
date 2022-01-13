@@ -6,18 +6,27 @@ export default function Header() {
    return (
       <header className="py-6">
          <Container>
-            <div className="flex justify-between items-center space-x-4">
-               <div>
-                  <Link href="/">
-                     <a className="flex flex-col space-y-2 sm:space-y-0 sm:flex-row sm:items-center sm:space-x-2">
-                        <div>
-                           <img src={`${prefix}/logo.svg`} className="h-12" alt="NHSX" />
-                        </div>
-                        <h1 className="font-medium text-xl">Open Source Imaging Datasets</h1>
-                     </a>
-                  </Link>
+
+            <div className="flex flex-col space-y-2 sm:space-y-0 sm:flex-row sm:items-center sm:justify-between sm:space-x-4">
+               <div className="flex divide-x items-center">
+                  <div className="pr-4 flex-shrink-0">
+                     <Link href="https://www.nihr.ac.uk/">
+                        <a target="_blank">
+                           <img src={`${prefix}/nihr-logo.png`} alt="National Institute for Health Research" className="h-6 sm:h-8" />
+                        </a>
+                     </Link>
+                  </div>
+                  <div className="pl-4"> 
+                     <Link href="/">
+                        <a className="flex flex-col flex-shrink-0 space-y-2 sm:space-y-0 sm:flex-row sm:items-center sm:space-x-2">
+                           <div>
+                              <img src={`${prefix}/logo.svg`} className="h-8 sm:h-10" alt="NHSX" />
+                           </div>
+                        </a>
+                     </Link>
+                  </div>
                </div>
-               <div>
+               <div className="hidden sm:block">
                   <Link href="https://github.com/nhsx/open-source-imaging-data-sets">
                      <a
                         target="_BLANK"
