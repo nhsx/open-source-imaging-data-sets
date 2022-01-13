@@ -1,4 +1,5 @@
 import Container from "components/Container"
+import { prefix } from "lib/prefix"
 import Link from "next/link"
 
 export default function Header() {
@@ -10,7 +11,7 @@ export default function Header() {
                   <Link href="/">
                      <a className="flex flex-col space-y-2 sm:space-y-0 sm:flex-row sm:items-center sm:space-x-2">
                         <div>
-                           <img src="/logo.svg" className="h-12" alt="NHSX" />
+                           <img src={`${prefix}/logo.svg`} className="h-12" alt="NHSX" />
                         </div>
                         <h1 className="font-medium text-xl">Open Source Imaging Datasets</h1>
                      </a>
