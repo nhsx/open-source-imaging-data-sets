@@ -1,26 +1,14 @@
-import Container from "components/Container"
-import Header from "components/Header"
-import Spinner from "components/Spinner"
-import { parseFile } from "lib/csv"
+
+import Link from "next/link"
 import { useEffect, useMemo, useState } from "react"
 import { SearchIcon } from "@heroicons/react/outline"
+import { basicSearch } from "lib/sort"
+import { parseFile } from "lib/csv"
+import Container from "components/Container"
 import Button from "components/Button"
 import Select from "components/Select"
-import Link from "next/link"
+import Header from "components/Header"
 import Footer from "components/Footer"
-
-/**
- * Sort by name property 
- */
-const nameSort = (a, b) => a.name > b.name
-
-/**
- * Basic search which matches search string again title and URL's present in data 
- */
-const basicSearch = (search, data) => data.filter(entry => (
-   entry.name.toLowerCase().indexOf(search.toLowerCase()) > -1 ||
-   entry.name.toLowerCase().indexOf(search.toLowerCase()) > -1)
-).sort(nameSort)
 
 const Introduction = () => (
    <section className="pt-6">

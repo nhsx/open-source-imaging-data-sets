@@ -1,49 +1,22 @@
-import Container from "components/Container"
-import Header from "components/Header"
-import Spinner from "components/Spinner"
-import { parseFile } from "lib/csv"
+import Link from "next/link"
 import { useEffect, useMemo, useState } from "react"
 import { SearchIcon } from "@heroicons/react/outline"
+import { prefix } from "lib/prefix"
+import { parseFile } from "lib/csv"
+import { basicSearch } from "lib/sort"
+import Container from "components/Container"
+import Footer from "components/Footer"
+import Header from "components/Header"
 import Button from "components/Button"
 import Select from "components/Select"
-import Link from "next/link"
-import Footer from "components/Footer"
-import { prefix } from "lib/prefix"
 
-/**
- * Sort by name property 
- */
-const nameSort = (a, b) => a.name > b.name
-
-/**
- * Basic search which matches search string again title and URL's present in data 
- */
-const basicSearch = (search, data) => data.filter(entry => (
-   entry.name.toLowerCase().indexOf(search.toLowerCase()) > -1 ||
-   entry.name.toLowerCase().indexOf(search.toLowerCase()) > -1)
-).sort(nameSort)
-
-const Introduction = ({ search, setSearch, active }) => (
+const Introduction = ({ active }) => (
    <section className={`flex duration-500 ease-in-out ${active ? 'h-0' : 'h-[200px] sm:h-[250px] md:h-[300px] xl:h-[500px]'}`}>
       <div className="flex-1 flex flex-col justify-center py-16 sm:py-24 lg:py-32">
          <Container>
             <h1 className="text-3xl sm:text-5xl lg:text-6xl font-bold text-center tracking-tighter leading-tight text-gray-800">
                A collection of open source<br /> imaging data sets.
             </h1>
-            {/* <div className="relative flex sm:justify-center mt-10">
-            <div className="relative w-full sm:w-auto">
-               <div className="absolute flex items-center px-4 top-0 bottom-0 left-0">
-                  <SearchIcon className="w-4 h-4 text-gray-800" />
-               </div>
-               <input
-                  type="text"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="bg-white shadow-xl border-none pl-10 pr-3 py-4 w-full text-sm text-gray-800 focus:ring-blue-500 focus:ring-2 focus:ring-offset-1 sm:w-96"
-                  placeholder="Search datasets"
-               />
-            </div>
-         </div> */}
          </Container>
       </div>
    </section>
@@ -287,7 +260,7 @@ export default function Home() {
             <div className="absolute inset-0 z-[2] pointer-events-none bg-gradient-to-b from-gray-50 to-transparent"></div>
             <div className="relative z-[3] flex flex-col">
                <Header />
-               <Introduction search={search} setSearch={setSearch} active={active} setActive={setActive} />
+               <Introduction active={active} setActive={setActive} />
             </div>
          </div>
 
