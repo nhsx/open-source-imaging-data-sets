@@ -205,8 +205,8 @@ const DataList = () => {
                                                 <div className="text-sm font-medium text-gray-900">{entry.name || '-'}</div>
                                                 <div className="text-sm text-gray-500">{entry.url}</div>
                                              </td>
-                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800">{entry.imageType}</td>
-                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800">{entry.focusType}</td>
+                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{entry.imageType}</td>
+                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{entry.focusType}</td>
                                              <td className="px-6 py-4 flex flex-col space-y-2 items-start whitespace-nowrap">
                                                 {entry.openAccess && (
                                                    <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
