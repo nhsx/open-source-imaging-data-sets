@@ -74,7 +74,7 @@ const DataList = ({ search, setSearch, active, setActive }) => {
                            value={search}
                            onChange={(e) => setSearch(e.target.value)}
                            onFocus={() => setActive(true)}
-                           className="w-full border-gray-300 pl-10 pr-3 py-2 text-sm text-gray-800 focus:ring-blue-500 focus:ring-2 focus:border-transparent focus:ring-offset-1"
+                           className="w-full border-gray-300 pl-10 pr-3 py-2 sm:text-sm text-gray-800 focus:ring-blue-500 focus:ring-2 focus:border-transparent focus:ring-offset-1"
                            placeholder="Search datasets"
                         />
                      </div>
@@ -257,7 +257,7 @@ export default function Home() {
          {/* Above the fold */}
          <div className="relative">
             <div className="absolute inset-0 z-[0] pointer-events-none bg-gradient-to-b from-gray-50 to-gray-100"></div>
-            <div className="absolute inset-0 z-[2] pointer-events-none bg-gradient-to-b from-gray-50 to-transparent"></div>
+            <div className="absolute inset-0 z-[2] pointer-events-none bg-gradient-to-b from-gray-50"></div>
             <div className="relative z-[3] flex flex-col">
                <Header />
                <Introduction active={active} setActive={setActive} />
@@ -267,7 +267,7 @@ export default function Home() {
          {/* Data list */}
          <div className="relative">
             <div className="absolute inset-0 z-[0] pointer-events-none bg-gradient-to-b from-gray-100 to-gray-50"></div>
-            <div className="absolute inset-0 z-[2] pointer-events-none bg-gradient-to-b from-transparent to-gray-50"></div>
+            <div className="absolute inset-0 z-[2] pointer-events-none bg-gradient-to-b to-gray-50"></div>
             <div className="relative z-[3]">
                <DataList search={search} setSearch={setSearch} active={active} setActive={setActive} />
                <Footer />
