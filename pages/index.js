@@ -191,8 +191,12 @@ const DataList = ({ search, setSearch, active, setActive }) => {
                                           {filteredData.map((entry) => (
                                              <tr key={entry.url}>
                                                 <td className="px-6 py-4">
-                                                   <div className="text-sm font-medium text-gray-900">{entry.name || '-'}</div>
-                                                   <div className="text-sm text-gray-500">{entry.url}</div>
+                                                   <Link href={entry.url}>
+                                                      <a target="_blank">
+                                                         <span className="block text-sm font-medium text-gray-900">{entry.name || '-'}</span>
+                                                         <span className="block text-sm text-gray-500">{entry.url}</span>
+                                                      </a>
+                                                   </Link>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{entry.imageType}</td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{entry.focusType}</td>
