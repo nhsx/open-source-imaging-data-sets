@@ -47,9 +47,7 @@ const DataList = ({ search, setSearch, active, setActive }) => {
          }
       }
 
-      console.log(arr)
-
-      // Create array
+      // Set data 
       setData(arr)
 
    }
