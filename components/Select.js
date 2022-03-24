@@ -3,7 +3,7 @@ import { CheckIcon, ChevronDownIcon } from "@heroicons/react/outline";
 import { Fragment, useEffect, useState } from "react"
 import Label from "./Label";
 
-export default function Select({ label, options, onSelect = () => { } }) {
+export default function Select({ label, options, onSelect = () => {} }) {
 
    // Local state 
    const [loaded, setLoaded] = useState(false)
@@ -22,7 +22,7 @@ export default function Select({ label, options, onSelect = () => { } }) {
          <div className="relative">
             {label && <Label>{label}</Label>}
             <Listbox.Button className="relative w-full py-2 pl-3 pr-10 text-sm text-left bg-white rounded-md border border-gray-200 cursor-default focus:outline-none focus-visible:ring-2 focus-visible:ring-opacity-75 focus-visible:ring-white focus-visible:ring-offset-orange-300 focus-visible:ring-offset-2 focus-visible:border-indigo-500">
-               <span className="block truncate">{selectedOption?.label}</span>
+               <span className="block truncate capitalize">{selectedOption?.label}</span>
                <span className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
                   <ChevronDownIcon className="h-4 w-4 text-gray-500" />
                </span>
@@ -45,7 +45,7 @@ export default function Select({ label, options, onSelect = () => { } }) {
                      >
                         {({ active, selected }) => (
                            <>
-                              <span className={`${selected ? 'font-medium' : 'font-normal'} block truncate`}>
+                              <span className={`${selected ? 'font-medium' : 'font-normal'} block truncate capitalize`}>
                                  {option.label}
                               </span>
                               {selected ? (

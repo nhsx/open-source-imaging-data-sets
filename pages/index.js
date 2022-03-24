@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react"
 import { SearchIcon } from "@heroicons/react/outline"
 import { prefix } from "lib/prefix"
 import { parseFile } from "lib/csv"
-import { basicSearch } from "lib/sort"
+import { booleanColumnSearch, booleanMultiColumnSearch, columnSearch, nameSort, textSearch } from "lib/sort"
 import Container from "components/Container"
 import Footer from "components/Footer"
 import Header from "components/Header"
@@ -22,12 +22,55 @@ const Introduction = ({ active }) => (
    </section>
 )
 
-const DataList = ({ search, setSearch, active, setActive }) => {
+const DataList = ({ query, setQuery, active, setActive }) => {
 
    // Local state 
+   const [headers, setHeaders] = useState([])
    const [data, setData] = useState([])
    const [showFilters, setShowFilters] = useState(false)
-   const filteredData = useMemo(() => data.length > 0 ? search ? basicSearch(search, data) : data : [])
+   const [activeFilters, setActiveFilters] = useState({})
+
+   // Filter data
+   const filterData = () => {
+
+      // Check if we have data to filter
+      if (data.length == 0) return []
+
+      // Check we have filters to process
+      if (!accessFilters && !query) return data
+
+      // Result set
+      let results = data
+      let filterTypeCount = 0
+
+      // Text search 
+      if (query)
+         results = results.filter(item1 => textSearch(query, data).some(item2 => item1.name === item2.name))
+
+      // Column filters
+      if (columnFilters) {
+         for (const [type, _] of Object.entries(columnFilters)) {
+            if (activeFilters[type] && activeFilters[type][0] !== '')
+               results = results.filter(item1 => booleanMultiColumnSearch(type, activeFilters[type], data).some(item2 => item1.name === item2.name))
+         }
+      }
+
+      // Access
+      if (activeFilters['access'] && activeFilters['access'][0] !== '') {
+         results = results.filter(item1 => (Object.keys(activeFilters).map(key => booleanColumnSearch(activeFilters[key], data)).filter(result => result.length > 0)[0]).some(item2 => item1.name === item2.name))
+      }
+
+      // Merge and return 
+      return results
+   }
+
+   // Computed data
+   const columnFilters = useMemo(() => ({
+      'area of body': headers.length > 0 ? headers.filter(header => header.includes('area of body')).map(header => header.split(' - ')[1]) : [],
+      'imaging type': headers.length > 0 ? headers.filter(header => header.includes('imaging type')).map(header => header.split(' - ')[1]) : [],
+   }), [headers])
+   const accessFilters = ['open access', 'access on application', 'commercial access']
+   const filteredData = useMemo(() => filterData(), [data, activeFilters, columnFilters])
 
    // Get marker data, parse + store 
    const getData = async () => {
@@ -36,19 +79,22 @@ const DataList = ({ search, setSearch, active, setActive }) => {
       const data = await parseFile('/data/snapshot-dataset.csv')
 
       // Remove headers
-      const headers = data.shift()
+      const headers = data.shift().map(header => header.toLowerCase())
 
       // Loop and create associative array 
-      let arr = []
-      for(let i = 0; i < data.length; i++) {
-         arr[i] = []
-         for(let j = 0; j < headers.length; j++) {
-            arr[i][headers[j].toLowerCase()] = data[i][j]
+      let rows = []
+      for (let i = 0; i < data.length; i++) {
+         rows[i] = []
+         for (let j = 0; j < headers.length; j++) {
+            rows[i][headers[j].toLowerCase()] = data[i][j]
          }
       }
 
+      // Set headers
+      setHeaders(headers)
+
       // Set data 
-      setData(arr)
+      setData([...rows.sort(nameSort)])
 
    }
 
@@ -69,8 +115,8 @@ const DataList = ({ search, setSearch, active, setActive }) => {
                         </div>
                         <input
                            type="text"
-                           value={search}
-                           onChange={(e) => setSearch(e.target.value)}
+                           value={query}
+                           onChange={(e) => setQuery(e.target.value)}
                            onFocus={() => setActive(true)}
                            className="w-full border-gray-300 pl-10 pr-3 py-2 sm:text-sm text-gray-800 focus:ring-blue-500 focus:ring-2 focus:border-transparent focus:ring-offset-1"
                            placeholder="Search datasets"
@@ -88,58 +134,43 @@ const DataList = ({ search, setSearch, active, setActive }) => {
                            <div className="flex-1">
                               <Select
                                  label="Image Type"
-                                 options={[
-                                    {
-                                       value: "ct",
-                                       label: "CT"
-                                    },
-                                    {
-                                       value: "mri",
-                                       label: "MRI"
-                                    },
-                                    {
-                                       value: "xray",
-                                       label: "X-ray"
-                                    },
-                                 ]}
+                                 onSelect={({ value, label }) => setActiveFilters({
+                                    ...activeFilters,
+                                    'imaging type': [value]
+                                 })}
+                                 options={
+                                    [{ label: 'Select a type', value: '' }].concat(
+                                       columnFilters['imaging type'].map(entry => ({ value: entry, label: entry }))
+                                    )
+                                 }
                               />
                            </div>
                            <div className="flex-1">
                               <Select
-                                 label="Focus"
-                                 options={[
-                                    {
-                                       value: "alzheimers",
-                                       label: "Alzheimers"
-                                    },
-                                    {
-                                       value: "covid",
-                                       label: "Covid"
-                                    },
-                                    {
-                                       value: "arthritis",
-                                       label: "Arthritis"
-                                    },
-                                 ]}
+                                 label="Area of Body"
+                                 onSelect={({ value, label }) => setActiveFilters({
+                                    ...activeFilters,
+                                    'area of body': [value]
+                                 })}
+                                 options={
+                                    [{ label: 'Select a type', value: '' }].concat(
+                                       columnFilters['area of body'].map(entry => ({ value: entry, label: entry }))
+                                    )
+                                 }
                               />
                            </div>
                            <div className="flex-1">
                               <Select
-                                 label="Permission"
-                                 options={[
-                                    {
-                                       value: "open-access",
-                                       label: "Open Access"
-                                    },
-                                    {
-                                       value: "on-application",
-                                       label: "On Application"
-                                    },
-                                    {
-                                       value: "none",
-                                       label: "None"
-                                    },
-                                 ]}
+                                 label="Access type"
+                                 onSelect={({ value, label }) => setActiveFilters({
+                                    ...activeFilters,
+                                    'access': [value]
+                                 })}
+                                 options={
+                                    [{ label: 'Select a type', value: '' }].concat(
+                                       accessFilters.map(entry => ({ value: entry, label: entry }))
+                                    )
+                                 }
                               />
                            </div>
                         </div>
@@ -238,7 +269,7 @@ const DataList = ({ search, setSearch, active, setActive }) => {
 export default function Home() {
 
    // Local state 
-   const [search, setSearch] = useState('')
+   const [query, setQuery] = useState('')
    const [active, setActive] = useState(false)
 
    return (
@@ -255,7 +286,7 @@ export default function Home() {
 
          {/* Data list */}
          <div className="relative z-[3]">
-            <DataList search={search} setSearch={setSearch} active={active} setActive={setActive} />
+            <DataList query={query} setQuery={setQuery} active={active} setActive={setActive} />
             <Footer />
          </div>
       </div>
