@@ -22,6 +22,21 @@ const Introduction = () => (
    </section>
 )
 
+const EntryTypes = (entry) => {
+   const types = Object.keys(entry.entry).filter((key) => key.includes('imaging type'))
+   return (
+      <div className="flex space-x-2 mt-3">
+         {
+            types.map(type => entry.entry[type] === "TRUE" && (
+               <div key={type} className="rounded px-2 py-1 bg-gray-200 text-gray-600 text-xs capitalize">
+                  {type.replace(/imaging type - /, '')}
+               </div>
+            ))
+         }
+      </div>
+   )
+}
+
 const DataList = ({ query, setQuery }) => {
 
    // Local state 
@@ -221,6 +236,7 @@ const DataList = ({ query, setQuery }) => {
                                                          <span className="block text-sm font-medium text-gray-900">{entry['name'] || '-'}</span>
                                                          <span className="block text-sm text-blue-500">{entry['url']}</span>
                                                          <span className="block text-sm text-gray-500 mt-2">{entry['data notes']}</span>
+                                                         <EntryTypes entry={entry} />
                                                       </a>
                                                    </Link>
                                                 </td>
@@ -279,7 +295,7 @@ export default function Home() {
          {/* Above the fold */}
          <div className="relative z-[3] flex flex-col">
             <Header />
-            <Introduction  />
+            <Introduction />
          </div>
 
          {/* Data list */}
