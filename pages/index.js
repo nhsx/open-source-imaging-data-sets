@@ -10,19 +10,19 @@ import Header from "components/Header"
 import Button from "components/Button"
 import Select from "components/Select"
 
-const Introduction = ({ active }) => (
-   <section className={`flex duration-500 ease-in-out ${active ? 'h-0 opacity-0' : 'h-[200px] sm:h-[250px] md:h-[300px] xl:h-[500px]'}`}>
-      <div className="flex-1 flex flex-col justify-center py-16 sm:py-24 lg:py-32">
+const Introduction = () => (
+   <section className={`flex duration-500 ease-in-out`}>
+      <div className="flex-1 flex flex-col justify-center py-6 sm:py-12">
          <Container>
-            <h1 className="text-3xl sm:text-5xl lg:text-6xl font-bold text-center tracking-tighter leading-tight text-gray-800">
-               A collection of open source<br /> imaging data sets.
+            <h1 className="text-3xl lg:text-4xl xl:text-5xl font-bold text-center tracking-tighter leading-tight text-gray-800">
+               A collection of open source imaging data sets.
             </h1>
          </Container>
       </div>
    </section>
 )
 
-const DataList = ({ query, setQuery, active, setActive }) => {
+const DataList = ({ query, setQuery }) => {
 
    // Local state 
    const [headers, setHeaders] = useState([])
@@ -117,7 +117,6 @@ const DataList = ({ query, setQuery, active, setActive }) => {
                            type="text"
                            value={query}
                            onChange={(e) => setQuery(e.target.value)}
-                           onFocus={() => setActive(true)}
                            className="w-full border-gray-300 pl-10 pr-3 py-2 sm:text-sm text-gray-800 focus:ring-blue-500 focus:ring-2 focus:border-transparent focus:ring-offset-1"
                            placeholder="Search datasets"
                         />
@@ -270,7 +269,6 @@ export default function Home() {
 
    // Local state 
    const [query, setQuery] = useState('')
-   const [active, setActive] = useState(false)
 
    return (
       <div className="relative flex flex-col min-h-screen bg-gray-50">
@@ -281,12 +279,12 @@ export default function Home() {
          {/* Above the fold */}
          <div className="relative z-[3] flex flex-col">
             <Header />
-            <Introduction active={active} setActive={setActive} />
+            <Introduction  />
          </div>
 
          {/* Data list */}
          <div className="relative z-[3]">
-            <DataList query={query} setQuery={setQuery} active={active} setActive={setActive} />
+            <DataList query={query} setQuery={setQuery} />
             <Footer />
          </div>
       </div>
