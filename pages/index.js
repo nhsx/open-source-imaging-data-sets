@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { useEffect, useMemo, useState } from "react"
-import { ExternalLinkIcon, SearchIcon } from "@heroicons/react/outline"
+import { SearchIcon } from "@heroicons/react/outline"
 import { prefix } from "lib/prefix"
 import { parseFile } from "lib/csv"
 import { booleanColumnSearch, booleanMultiColumnSearch, columnSearch, nameSort, textSearch } from "lib/sort"
@@ -9,6 +9,8 @@ import Footer from "components/Footer"
 import Header from "components/Header"
 import Button from "components/Button"
 import Select from "components/Select"
+import { Popover } from "@headlessui/react"
+import { usePopper } from "react-popper"
 
 const Introduction = () => (
    <section className={`flex duration-500 ease-in-out`}>
@@ -23,10 +25,29 @@ const Introduction = () => (
 )
 
 const EntryTags = ({ entry, column, bgColor, textColor, limit = 3 }) => {
+
+   // Propper config 
+   let [referenceElement, setReferenceElement] = useState()
+   let [popperElement, setPopperElement] = useState()
+   let { styles, attributes } = usePopper(referenceElement, popperElement, {
+      placement: "top",
+      modifiers: [
+         {
+            name: "offset",
+            options: {
+               offset: [0, 8]
+            }
+         }
+      ]
+   })
+
+   // Tag processing 
    const types = Object.keys(entry).filter((key) => key.includes(column))
    const matches = types.filter(type => entry[type] === "TRUE").map(tag => tag.replace(column + ' - ', ''))
    const overflow = matches.slice(limit, matches.length + 1)
    const badgeClass = `${bgColor ? bgColor : 'bg-green-500'} ${textColor ? textColor : 'text-white'} text-xs rounded px-2 py-1 flex-shrink-0`
+
+   // Render 
    return (
       <div className="flex flex-shrink-0 space-x-2 mt-3">
          {
@@ -38,16 +59,34 @@ const EntryTags = ({ entry, column, bgColor, textColor, limit = 3 }) => {
          }
          {
             overflow.length > 0 && (
-               <div className="relative group">
-                  <div className="absolute bottom-full whitespace-nowrap py-1 opacity-0 duration-200 group-hover:opacity-100">
+               <Popover>
+
+                  {/* Button */}
+                  <Popover.Button
+                     ref={setReferenceElement}
+                     className={badgeClass}
+                  >
+                     + {overflow.length} more
+                  </Popover.Button>
+
+                  {/* Panel */}
+                  <Popover.Panel
+                     ref={setPopperElement}
+                     style={styles.popper}
+                     {...attributes.popper}
+                  >
                      <div className={badgeClass}>
                         {overflow.join(', ')}
                      </div>
-                  </div>
-                  <div className={badgeClass}>
-                     + {overflow.length} more
-                  </div>
-               </div>
+                     <div className="position absolute top-full left-0 right-0">
+                        <div className="flex justify-center">
+                           <div class="w-4 overflow-hidden inline-block">
+                              <div class={`h-2 w-2 -rotate-45 transform origin-top-left ${bgColor ? bgColor : 'bg-green-500'}`}></div>
+                           </div>
+                        </div>
+                     </div>
+                  </Popover.Panel>
+               </Popover>
             )
          }
       </div>
@@ -77,19 +116,19 @@ const DataList = ({ query, setQuery }) => {
 
       // Text search 
       if (query)
-         results = results.filter(item1 => textSearch(query, data).some(item2 => item1.name === item2.name))
+         results = results.filter(item1 => textSearch(query, data).some(item2 => item1['Name'] === item2['Name']))
 
       // Column filters
       if (columnFilters) {
          for (const [type, _] of Object.entries(columnFilters)) {
             if (activeFilters[type] && activeFilters[type][0] !== '')
-               results = results.filter(item1 => booleanMultiColumnSearch(type, activeFilters[type], data).some(item2 => item1.name === item2.name))
+               results = results.filter(item1 => booleanMultiColumnSearch(type, activeFilters[type], data).some(item2 => item1['Name'] === item2['Name']))
          }
       }
 
       // Access
       if (activeFilters['access'] && activeFilters['access'][0] !== '') {
-         results = results.filter(item1 => (Object.keys(activeFilters).map(key => booleanColumnSearch(activeFilters[key], data)).filter(result => result.length > 0)[0]).some(item2 => item1.name === item2.name))
+         results = results.filter(item1 => (Object.keys(activeFilters).map(key => booleanColumnSearch(activeFilters[key], data)).filter(result => result.length > 0)[0]).some(item2 => item1['Name'] === item2['Name']))
       }
 
       // Merge and return 
@@ -98,11 +137,11 @@ const DataList = ({ query, setQuery }) => {
 
    // Computed data
    const columnFilters = useMemo(() => ({
-      'area of body': headers.length > 0 ? headers.filter(header => header.includes('area of body')).map(header => header.split(' - ')[1]) : [],
-      'imaging type': headers.length > 0 ? headers.filter(header => header.includes('imaging type')).map(header => header.split(' - ')[1]) : [],
+      'Area of body': headers.length > 0 ? headers.filter(header => header.includes('Area of body')).map(header => header.split(' - ')[1]) : [],
+      'Imaging type': headers.length > 0 ? headers.filter(header => header.includes('Imaging type')).map(header => header.split(' - ')[1]) : [],
    }), [headers])
-   const accessFilters = ['open access', 'access on application', 'commercial access']
-   const filteredData = useMemo(() => filterData(), [data, activeFilters, columnFilters])
+   const accessFilters = ['Open access', 'Access on application', 'Commercial access']
+   const filteredData = useMemo(() => filterData(), [data, activeFilters, columnFilters, query])
 
    // Get marker data, parse + store 
    const getData = async () => {
@@ -171,7 +210,7 @@ const DataList = ({ query, setQuery }) => {
                                  })}
                                  options={
                                     [{ label: 'Select a type', value: '' }].concat(
-                                       columnFilters['imaging type'].map(entry => ({ value: entry, label: entry }))
+                                       columnFilters['Imaging type'].map(entry => ({ value: entry, label: entry }))
                                     )
                                  }
                               />
@@ -185,7 +224,7 @@ const DataList = ({ query, setQuery }) => {
                                  })}
                                  options={
                                     [{ label: 'Select a type', value: '' }].concat(
-                                       columnFilters['area of body'].map(entry => ({ value: entry, label: entry }))
+                                       columnFilters['Area of body'].map(entry => ({ value: entry, label: entry }))
                                     )
                                  }
                               />
@@ -195,7 +234,7 @@ const DataList = ({ query, setQuery }) => {
                                  label="Access type"
                                  onSelect={({ value, label }) => setActiveFilters({
                                     ...activeFilters,
-                                    'Access': [value]
+                                    'access': [value]
                                  })}
                                  options={
                                     [{ label: 'Select a type', value: '' }].concat(
@@ -248,22 +287,19 @@ const DataList = ({ query, setQuery }) => {
                                           {filteredData.map((entry, index) => (
                                              <tr key={index}>
                                                 <td className="px-6 py-4">
-                                                   <Link href={entry['url'] ?? '#'}>
-                                                      <a target="_blank">
-                                                         <div className="flex space-x-2 items-center">
-                                                            <span className="block text-sm font-medium text-gray-900">{entry['Name'] || '-'}</span>
-                                                            <ExternalLinkIcon className="w-4 h-4 text-gray-600" />
-                                                         </div>
-                                                         <span className="block text-sm text-gray-500 mt-1">{entry['Data notes']}</span>
-                                                         <div className="flex space-x-2 items-start">
-                                                            <EntryTags entry={entry} column="Imaging type" />
-                                                            <EntryTags entry={entry} column="Area of body" bgColor="bg-blue-500" textColor="text-white" />
-                                                         </div>
-                                                      </a>
-                                                   </Link>
+                                                   <div className="flex space-x-2 items-start">
+                                                      <Link href={entry['url'] ?? '#'}>
+                                                         <a target="_blank" className="block text-sm underline font-medium text-gray-900 duration-100 hover:text-gray-500">{entry['Name'] || '-'}</a>
+                                                      </Link>
+                                                   </div>
+                                                   <span className="block text-sm text-gray-500 mt-1">{entry['Data notes']}</span>
+                                                   <div className="flex space-x-2 items-start">
+                                                      <EntryTags entry={entry} column="Imaging type" />
+                                                      <EntryTags entry={entry} column="Area of body" bgColor="bg-blue-500" textColor="text-white" />
+                                                   </div>
                                                 </td>
-                                                <td className="px-6 py-4 text-sm text-gray-500">{entry['type of resource']}</td>
-                                                <td className="px-6 py-4 text-sm text-gray-500">{entry['area of focus']}</td>
+                                                <td className="px-6 py-4 text-sm text-gray-500">{entry['Type of Resource']}</td>
+                                                <td className="px-6 py-4 text-sm text-gray-500">{entry['Area of focus']}</td>
                                                 <td className="px-6 py-4 flex flex-col space-y-2 items-start whitespace-nowrap">
                                                    {entry['Open access'] === "TRUE" && (
                                                       <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
