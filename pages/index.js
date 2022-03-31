@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { useEffect, useMemo, useState } from "react"
-import { SearchIcon } from "@heroicons/react/outline"
+import { ExternalLinkIcon, SearchIcon } from "@heroicons/react/outline"
 import { prefix } from "lib/prefix"
 import { parseFile } from "lib/csv"
 import { booleanColumnSearch, booleanMultiColumnSearch, columnSearch, nameSort, textSearch } from "lib/sort"
@@ -22,16 +22,33 @@ const Introduction = () => (
    </section>
 )
 
-const EntryTypes = (entry) => {
-   const types = Object.keys(entry.entry).filter((key) => key.includes('imaging type'))
+const EntryTags = ({ entry, column, bgColor, textColor, limit = 3 }) => {
+   const types = Object.keys(entry).filter((key) => key.includes(column))
+   const matches = types.filter(type => entry[type] === "TRUE").map(tag => tag.replace(column + ' - ', ''))
+   const overflow = matches.slice(limit, matches.length + 1)
+   const badgeClass = `${bgColor ? bgColor : 'bg-green-500'} ${textColor ? textColor : 'text-white'} text-xs rounded px-2 py-1 flex-shrink-0`
    return (
-      <div className="flex space-x-2 mt-3">
+      <div className="flex flex-shrink-0 space-x-2 mt-3">
          {
-            types.map(type => entry.entry[type] === "TRUE" && (
-               <div key={type} className="rounded px-2 py-1 bg-gray-200 text-gray-600 text-xs capitalize">
-                  {type.replace(/imaging type - /, '')}
+            matches.slice(0, limit).map(tag => (
+               <div key={tag} className={badgeClass}>
+                  {tag}
                </div>
             ))
+         }
+         {
+            overflow.length > 0 && (
+               <div className="relative group">
+                  <div className="absolute bottom-full whitespace-nowrap py-1 opacity-0 duration-200 group-hover:opacity-100">
+                     <div className={badgeClass}>
+                        {overflow.join(', ')}
+                     </div>
+                  </div>
+                  <div className={badgeClass}>
+                     + {overflow.length} more
+                  </div>
+               </div>
+            )
          }
       </div>
    )
@@ -94,14 +111,14 @@ const DataList = ({ query, setQuery }) => {
       const data = await parseFile('/data/snapshot-dataset.csv')
 
       // Remove headers
-      const headers = data.shift().map(header => header.toLowerCase())
+      const headers = data.shift()
 
       // Loop and create associative array 
       let rows = []
       for (let i = 0; i < data.length; i++) {
          rows[i] = []
          for (let j = 0; j < headers.length; j++) {
-            rows[i][headers[j].toLowerCase()] = data[i][j]
+            rows[i][headers[j]] = data[i][j]
          }
       }
 
@@ -150,7 +167,7 @@ const DataList = ({ query, setQuery }) => {
                                  label="Image Type"
                                  onSelect={({ value, label }) => setActiveFilters({
                                     ...activeFilters,
-                                    'imaging type': [value]
+                                    'Imaging type': [value]
                                  })}
                                  options={
                                     [{ label: 'Select a type', value: '' }].concat(
@@ -164,7 +181,7 @@ const DataList = ({ query, setQuery }) => {
                                  label="Area of Body"
                                  onSelect={({ value, label }) => setActiveFilters({
                                     ...activeFilters,
-                                    'area of body': [value]
+                                    'Area of body': [value]
                                  })}
                                  options={
                                     [{ label: 'Select a type', value: '' }].concat(
@@ -178,7 +195,7 @@ const DataList = ({ query, setQuery }) => {
                                  label="Access type"
                                  onSelect={({ value, label }) => setActiveFilters({
                                     ...activeFilters,
-                                    'access': [value]
+                                    'Access': [value]
                                  })}
                                  options={
                                     [{ label: 'Select a type', value: '' }].concat(
@@ -233,27 +250,32 @@ const DataList = ({ query, setQuery }) => {
                                                 <td className="px-6 py-4">
                                                    <Link href={entry['url'] ?? '#'}>
                                                       <a target="_blank">
-                                                         <span className="block text-sm font-medium text-gray-900">{entry['name'] || '-'}</span>
-                                                         <span className="block text-sm text-blue-500">{entry['url']}</span>
-                                                         <span className="block text-sm text-gray-500 mt-2">{entry['data notes']}</span>
-                                                         <EntryTypes entry={entry} />
+                                                         <div className="flex space-x-2 items-center">
+                                                            <span className="block text-sm font-medium text-gray-900">{entry['Name'] || '-'}</span>
+                                                            <ExternalLinkIcon className="w-4 h-4 text-gray-600" />
+                                                         </div>
+                                                         <span className="block text-sm text-gray-500 mt-1">{entry['Data notes']}</span>
+                                                         <div className="flex space-x-2 items-start">
+                                                            <EntryTags entry={entry} column="Imaging type" />
+                                                            <EntryTags entry={entry} column="Area of body" bgColor="bg-blue-500" textColor="text-white" />
+                                                         </div>
                                                       </a>
                                                    </Link>
                                                 </td>
                                                 <td className="px-6 py-4 text-sm text-gray-500">{entry['type of resource']}</td>
                                                 <td className="px-6 py-4 text-sm text-gray-500">{entry['area of focus']}</td>
                                                 <td className="px-6 py-4 flex flex-col space-y-2 items-start whitespace-nowrap">
-                                                   {entry['open access'] === "TRUE" && (
+                                                   {entry['Open access'] === "TRUE" && (
                                                       <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
                                                          Open Access
                                                       </span>
                                                    )}
-                                                   {entry['access on application'] === "TRUE" && (
+                                                   {entry['Access on application'] === "TRUE" && (
                                                       <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
                                                          Access on Application
                                                       </span>
                                                    )}
-                                                   {entry['commercial access'] === "TRUE" && (
+                                                   {entry['Commercial access'] === "TRUE" && (
                                                       <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
                                                          Commercial Access
                                                       </span>
