@@ -3,54 +3,168 @@ import { useEffect, useMemo, useState } from "react"
 import { SearchIcon } from "@heroicons/react/outline"
 import { prefix } from "lib/prefix"
 import { parseFile } from "lib/csv"
-import { basicSearch } from "lib/sort"
+import { Popover } from "@headlessui/react"
+import { usePopper } from "react-popper"
+import { booleanColumnSearch, booleanMultiColumnSearch, nameSort, textSearch } from "lib/sort"
 import Container from "components/Container"
 import Footer from "components/Footer"
 import Header from "components/Header"
 import Button from "components/Button"
 import Select from "components/Select"
-
-const Introduction = ({ active }) => (
-   <section className={`flex duration-500 ease-in-out ${active ? 'h-0' : 'h-[200px] sm:h-[250px] md:h-[300px] xl:h-[500px]'}`}>
-      <div className="flex-1 flex flex-col justify-center py-16 sm:py-24 lg:py-32">
+const Introduction = () => (
+   <section className={`flex duration-500 ease-in-out`}>
+      <div className="flex-1 flex flex-col justify-center py-6 sm:py-12">
          <Container>
-            <h1 className="text-3xl sm:text-5xl lg:text-6xl font-bold text-center tracking-tighter leading-tight text-gray-800">
-               A collection of open source<br /> imaging data sets.
+            <h1 className="text-3xl lg:text-4xl xl:text-5xl font-bold text-center tracking-tighter leading-tight text-gray-800">
+               A collection of open source imaging data sets.
             </h1>
          </Container>
       </div>
    </section>
 )
 
-const DataList = ({ search, setSearch, active, setActive }) => {
+const EntryTags = ({ entry, column, bgColor, textColor, limit = 3 }) => {
+
+   // Propper config 
+   let [referenceElement, setReferenceElement] = useState()
+   let [popperElement, setPopperElement] = useState()
+   let { styles, attributes } = usePopper(referenceElement, popperElement, {
+      placement: "top",
+      modifiers: [
+         {
+            name: "offset",
+            options: {
+               offset: [0, 8]
+            }
+         }
+      ]
+   })
+
+   // Tag processing 
+   const types = Object.keys(entry).filter((key) => key.includes(column))
+   const matches = types.filter(type => entry[type] === "TRUE").map(tag => tag.replace(column + ' - ', ''))
+   const overflow = matches.slice(limit, matches.length + 1)
+   const badgeClass = `${bgColor ? bgColor : 'bg-green-500'} ${textColor ? textColor : 'text-white'} text-xs rounded px-2 py-1 flex-shrink-0`
+
+   // Render 
+   return (
+      <div className="flex flex-shrink-0 space-x-2 mt-3">
+         {
+            matches.slice(0, limit).map(tag => (
+               <div key={tag} className={badgeClass}>
+                  {tag}
+               </div>
+            ))
+         }
+         {
+            overflow.length > 0 && (
+               <Popover>
+
+                  {/* Button */}
+                  <Popover.Button
+                     ref={setReferenceElement}
+                     className={badgeClass}
+                  >
+                     + {overflow.length} more
+                  </Popover.Button>
+
+                  {/* Panel */}
+                  <Popover.Panel
+                     ref={setPopperElement}
+                     style={styles.popper}
+                     {...attributes.popper}
+                  >
+                     <div className={badgeClass}>
+                        {overflow.join(', ')}
+                     </div>
+                     <div className="position absolute top-full left-0 right-0">
+                        <div className="flex justify-center">
+                           <div class="w-4 overflow-hidden inline-block">
+                              <div class={`h-2 w-2 -rotate-45 transform origin-top-left ${bgColor ? bgColor : 'bg-green-500'}`}></div>
+                           </div>
+                        </div>
+                     </div>
+                  </Popover.Panel>
+               </Popover>
+            )
+         }
+      </div>
+   )
+}
+
+const DataList = ({ query, setQuery }) => {
 
    // Local state 
+   const [headers, setHeaders] = useState([])
    const [data, setData] = useState([])
    const [showFilters, setShowFilters] = useState(false)
-   const filteredData = useMemo(() => data.length > 0 ? search ? basicSearch(search, data) : data : [])
+   const [activeFilters, setActiveFilters] = useState({})
+
+   // Filter data
+   const filterData = () => {
+
+      // Check if we have data to filter
+      if (data.length == 0) return []
+
+      // Check we have filters to process
+      if (!accessFilters && !query) return data
+
+      // Result set
+      let results = data
+      let filterTypeCount = 0
+
+      // Text search 
+      if (query)
+         results = results.filter(item1 => textSearch(query, data).some(item2 => item1['Name'] === item2['Name']))
+
+      // Column filters
+      if (columnFilters) {
+         for (const [type, _] of Object.entries(columnFilters)) {
+            if (activeFilters[type] && activeFilters[type][0] !== '')
+               results = results.filter(item1 => booleanMultiColumnSearch(type, activeFilters[type], data).some(item2 => item1['Name'] === item2['Name']))
+         }
+      }
+
+      // Access
+      if (activeFilters['access'] && activeFilters['access'][0] !== '') {
+         results = results.filter(item1 => (Object.keys(activeFilters).map(key => booleanColumnSearch(activeFilters[key], data)).filter(result => result.length > 0)[0]).some(item2 => item1['Name'] === item2['Name']))
+      }
+
+      // Merge and return 
+      return results
+   }
+
+   // Computed data
+   const columnFilters = useMemo(() => ({
+      'Area of body': headers.length > 0 ? headers.filter(header => header.includes('Area of body')).map(header => header.split(' - ')[1]) : [],
+      'Imaging type': headers.length > 0 ? headers.filter(header => header.includes('Imaging type')).map(header => header.split(' - ')[1]) : [],
+   }), [headers])
+   const accessFilters = ['Open access', 'Access on application', 'Commercial access']
+   const filteredData = useMemo(() => filterData(), [data, activeFilters, columnFilters, query])
 
    // Get marker data, parse + store 
    const getData = async () => {
 
       // Parse file 
-      const data = await parseFile('/data/open-source-datasets-raw.csv')
+      const data = await parseFile('/data/snapshot-dataset.csv')
 
       // Remove headers
-      data.shift()
+      const headers = data.shift()
 
-      // Set data
-      setData(data.map(entry => ({
-         name: entry[0],
-         url: entry[1],
-         area: entry[2],
-         imageType: entry[3],
-         resourceType: entry[4],
-         focusType: entry[5],
-         openAccess: entry[6],
-         requestAccess: entry[7],
-         commercialAccess: entry[8],
-         dataType: entry[9],
-      })))
+      // Loop and create associative array 
+      let rows = []
+      for (let i = 0; i < data.length; i++) {
+         rows[i] = []
+         for (let j = 0; j < headers.length; j++) {
+            rows[i][headers[j]] = data[i][j]
+         }
+      }
+
+      // Set headers
+      setHeaders(headers)
+
+      // Set data 
+      setData([...rows.sort(nameSort)])
 
    }
 
@@ -62,7 +176,7 @@ const DataList = ({ search, setSearch, active, setActive }) => {
    return (
       <section className={`pt-2 pb-6 duration-500 ease-in-out`}>
          <Container>
-            <div className={`relative bg-white shadow-xl rounded-xl`}>
+            <div className={`relative bg-white border border-gray-100 shadow-xl rounded-xl`}>
                <div className="py-6 bg-white rounded-t-xl sticky top-0 px-6">
                   <div className="flex flex-col space-y-2 sm:space-y-0 sm:flex-row sm:space-x-4 sm:items-center">
                      <div className="relative flex-1">
@@ -71,9 +185,8 @@ const DataList = ({ search, setSearch, active, setActive }) => {
                         </div>
                         <input
                            type="text"
-                           value={search}
-                           onChange={(e) => setSearch(e.target.value)}
-                           onFocus={() => setActive(true)}
+                           value={query}
+                           onChange={(e) => setQuery(e.target.value)}
                            className="w-full border-gray-300 pl-10 pr-3 py-2 sm:text-sm text-gray-800 focus:ring-blue-500 focus:ring-2 focus:border-transparent focus:ring-offset-1"
                            placeholder="Search datasets"
                         />
@@ -90,58 +203,43 @@ const DataList = ({ search, setSearch, active, setActive }) => {
                            <div className="flex-1">
                               <Select
                                  label="Image Type"
-                                 options={[
-                                    {
-                                       value: "ct",
-                                       label: "CT"
-                                    },
-                                    {
-                                       value: "mri",
-                                       label: "MRI"
-                                    },
-                                    {
-                                       value: "xray",
-                                       label: "X-ray"
-                                    },
-                                 ]}
+                                 onSelect={({ value, label }) => setActiveFilters({
+                                    ...activeFilters,
+                                    'Imaging type': [value]
+                                 })}
+                                 options={
+                                    [{ label: 'Select a type', value: '' }].concat(
+                                       columnFilters['Imaging type'].map(entry => ({ value: entry, label: entry }))
+                                    )
+                                 }
                               />
                            </div>
                            <div className="flex-1">
                               <Select
-                                 label="Focus"
-                                 options={[
-                                    {
-                                       value: "alzheimers",
-                                       label: "Alzheimers"
-                                    },
-                                    {
-                                       value: "covid",
-                                       label: "Covid"
-                                    },
-                                    {
-                                       value: "arthritis",
-                                       label: "Arthritis"
-                                    },
-                                 ]}
+                                 label="Area of Body"
+                                 onSelect={({ value, label }) => setActiveFilters({
+                                    ...activeFilters,
+                                    'Area of body': [value]
+                                 })}
+                                 options={
+                                    [{ label: 'Select a type', value: '' }].concat(
+                                       columnFilters['Area of body'].map(entry => ({ value: entry, label: entry }))
+                                    )
+                                 }
                               />
                            </div>
                            <div className="flex-1">
                               <Select
-                                 label="Permission"
-                                 options={[
-                                    {
-                                       value: "open-access",
-                                       label: "Open Access"
-                                    },
-                                    {
-                                       value: "on-application",
-                                       label: "On Application"
-                                    },
-                                    {
-                                       value: "none",
-                                       label: "None"
-                                    },
-                                 ]}
+                                 label="Access type"
+                                 onSelect={({ value, label }) => setActiveFilters({
+                                    ...activeFilters,
+                                    'access': [value]
+                                 })}
+                                 options={
+                                    [{ label: 'Select a type', value: '' }].concat(
+                                       accessFilters.map(entry => ({ value: entry, label: entry }))
+                                    )
+                                 }
                               />
                            </div>
                         </div>
@@ -168,7 +266,7 @@ const DataList = ({ search, setSearch, active, setActive }) => {
                                                 scope="col"
                                                 className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap"
                                              >
-                                                Image Types
+                                                Type
                                              </th>
                                              <th
                                                 scope="col"
@@ -182,47 +280,41 @@ const DataList = ({ search, setSearch, active, setActive }) => {
                                              >
                                                 Permissions
                                              </th>
-                                             <th scope="col" className="relative px-6 py-3">
-                                                <span className="sr-only">Edit</span>
-                                             </th>
                                           </tr>
                                        </thead>
                                        <tbody className="divide-y divide-gray-200">
-                                          {filteredData.map((entry) => (
-                                             <tr key={entry.url}>
+                                          {filteredData.map((entry, index) => (
+                                             <tr key={index}>
                                                 <td className="px-6 py-4">
-                                                   <Link href={entry.url}>
-                                                      <a target="_blank">
-                                                         <span className="block text-sm font-medium text-gray-900">{entry.name || '-'}</span>
-                                                         <span className="block text-sm text-gray-500">{entry.url}</span>
-                                                      </a>
-                                                   </Link>
+                                                   <div className="flex space-x-2 items-start">
+                                                      <Link href={entry['URL'] ?? '#'}>
+                                                         <a target="_blank" className="block text-sm underline font-medium text-gray-900 duration-100 hover:text-gray-500">{entry['Name'] || '-'}</a>
+                                                      </Link>
+                                                   </div>
+                                                   <span className="block text-sm text-gray-500 mt-1">{entry['Data notes']}</span>
+                                                   <div className="flex space-x-2 items-start">
+                                                      <EntryTags entry={entry} column="Imaging type" />
+                                                      <EntryTags entry={entry} column="Area of body" bgColor="bg-blue-500" textColor="text-white" />
+                                                   </div>
                                                 </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{entry.imageType}</td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{entry.focusType}</td>
+                                                <td className="px-6 py-4 text-sm text-gray-500">{entry['Type of Resource']}</td>
+                                                <td className="px-6 py-4 text-sm text-gray-500">{entry['Area of focus']}</td>
                                                 <td className="px-6 py-4 flex flex-col space-y-2 items-start whitespace-nowrap">
-                                                   {entry.openAccess && (
+                                                   {entry['Open access'] === "TRUE" && (
                                                       <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
                                                          Open Access
                                                       </span>
                                                    )}
-                                                   {entry.requestAccess && (
+                                                   {entry['Access on application'] === "TRUE" && (
                                                       <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-                                                         Access on Request
+                                                         Access on Application
                                                       </span>
                                                    )}
-                                                   {entry.openAccess && (
+                                                   {entry['Commercial access'] === "TRUE" && (
                                                       <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
                                                          Commercial Access
                                                       </span>
                                                    )}
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                                   <Link href={entry.url}>
-                                                      <a target="_blank" className="text-blue-600 hover:text-blue-900">
-                                                         View
-                                                      </a>
-                                                   </Link>
                                                 </td>
                                              </tr>
                                           ))}
@@ -249,33 +341,24 @@ const DataList = ({ search, setSearch, active, setActive }) => {
 export default function Home() {
 
    // Local state 
-   const [search, setSearch] = useState('')
-   const [active, setActive] = useState(false)
+   const [query, setQuery] = useState('')
 
    return (
-      <div className="relative flex flex-col">
+      <div className="relative flex flex-col min-h-screen bg-gray-50">
 
          {/* Pattern bg */}
-         <div className="absolute inset-0 z-[1] pointer-events-none bg-repeat bg-[length:50px_50px] opacity-5" style={{ backgroundImage: `url(${prefix}/hideout.svg)` }}></div>
+         <div className="absolute inset-0 z-[1] pointer-events-none bg-repeat bg-[length:50px_50px] opacity-[3%]" style={{ backgroundImage: `url(${prefix}/hideout.svg)` }}></div>
 
          {/* Above the fold */}
-         <div className="relative">
-            <div className="absolute inset-0 z-[0] pointer-events-none bg-gradient-to-b from-gray-50 to-gray-100"></div>
-            <div className="absolute inset-0 z-[2] pointer-events-none bg-gradient-to-b from-gray-50"></div>
-            <div className="relative z-[3] flex flex-col">
-               <Header />
-               <Introduction active={active} setActive={setActive} />
-            </div>
+         <div className="relative z-[3] flex flex-col">
+            <Header />
+            <Introduction />
          </div>
 
          {/* Data list */}
-         <div className="relative">
-            <div className="absolute inset-0 z-[0] pointer-events-none bg-gradient-to-b from-gray-100 to-gray-50"></div>
-            <div className="absolute inset-0 z-[2] pointer-events-none bg-gradient-to-b to-gray-50"></div>
-            <div className="relative z-[3]">
-               <DataList search={search} setSearch={setSearch} active={active} setActive={setActive} />
-               <Footer />
-            </div>
+         <div className="relative z-[3]">
+            <DataList query={query} setQuery={setQuery} />
+            <Footer />
          </div>
       </div>
    )
