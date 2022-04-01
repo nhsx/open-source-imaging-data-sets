@@ -3,15 +3,14 @@ import { useEffect, useMemo, useState } from "react"
 import { SearchIcon } from "@heroicons/react/outline"
 import { prefix } from "lib/prefix"
 import { parseFile } from "lib/csv"
-import { booleanColumnSearch, booleanMultiColumnSearch, columnSearch, nameSort, textSearch } from "lib/sort"
+import { Popover } from "@headlessui/react"
+import { usePopper } from "react-popper"
+import { booleanColumnSearch, booleanMultiColumnSearch, nameSort, textSearch } from "lib/sort"
 import Container from "components/Container"
 import Footer from "components/Footer"
 import Header from "components/Header"
 import Button from "components/Button"
 import Select from "components/Select"
-import { Popover } from "@headlessui/react"
-import { usePopper } from "react-popper"
-
 const Introduction = () => (
    <section className={`flex duration-500 ease-in-out`}>
       <div className="flex-1 flex flex-col justify-center py-6 sm:py-12">
@@ -288,7 +287,7 @@ const DataList = ({ query, setQuery }) => {
                                              <tr key={index}>
                                                 <td className="px-6 py-4">
                                                    <div className="flex space-x-2 items-start">
-                                                      <Link href={entry['url'] ?? '#'}>
+                                                      <Link href={entry['URL'] ?? '#'}>
                                                          <a target="_blank" className="block text-sm underline font-medium text-gray-900 duration-100 hover:text-gray-500">{entry['Name'] || '-'}</a>
                                                       </Link>
                                                    </div>
