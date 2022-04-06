@@ -4,7 +4,7 @@ A list of open source imaging datasets.
 
 ## Displaying data
 
-Currently the CSV file [`/public/data/open-source-datasets-merged.csv`](https://github.com/nhsx/open-source-imaging-data-sets/blob/main/public/data/open-source-datasets-merged.csv) is being pulled through and dislpayed in [`/pages/index.js`](https://github.com/nhsx/open-source-imaging-data-sets/blob/main/pages/index.js).
+Currently the CSV file [`/public/data/snapshot-dataset.csv`](https://github.com/nhsx/open-source-imaging-data-sets/blob/main/public/data/snapshot-dataset.csv) is being pulled through and displayed in [`/pages/index.js`](https://github.com/nhsx/open-source-imaging-data-sets/blob/main/pages/index.js).
 
 The columns are parsed on [L41](https://github.com/nhsx/open-source-imaging-data-sets/blob/c52345224dc3a70131d95a0d2dde85c13ea3d0e2/pages/index.js#L42) into an object. From here, they are displayed in the table which starts a [L158](https://github.com/nhsx/open-source-imaging-data-sets/blob/c52345224dc3a70131d95a0d2dde85c13ea3d0e2/pages/index.js#L158). 
 
@@ -45,3 +45,15 @@ npm run export
 ## Deployment  
 
 Upon merging into production, the project is automatically deployed to Github Pages via a Githook Action found in `.github/workflows/gh-pages-deployment.yml`. 
+
+## Licence
+
+Unless stated otherwise, the codebase is released under [the MIT Licence][mit].
+This covers both the codebase and any sample code in the documentation.
+
+The documentation is [© Crown copyright][copyright] and available under the terms
+of the [Open Government 3.0][ogl] licence.
+
+[mit]: LICENCE.md
+[copyright]: http://www.nationalarchives.gov.uk/information-management/re-using-public-sector-information/uk-government-licensing-framework/crown-copyright/
+[ogl]: http://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/
