@@ -1,19 +1,34 @@
-import Head from 'next/head'
+import { NextSeo } from "next-seo"
 
 import 'styles/index.css'
 
 export default function MyApp({ Component, pageProps }) {
-   return (
-      <>
-         <Head>
-            <title>NHSX Open Source Imaging Datasets</title>
-            <link rel="icon" href="/favicon.ico" />
-            <link
-               href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700&display=swap"
-               rel="stylesheet"
-            />
-         </Head>
-         <Component {...pageProps} />
-      </>
-   )
+  return (
+    <>
+      <NextSeo
+        title="NHS Open Source Imaging Datasets"
+        description="A list of open source imaging datasets."
+        openGraph={{
+          url: 'https://nhsx.github.io/open-source-imaging-data-sets/',
+          title: 'NHS Open Source Imaging Datasets',
+          description: 'A simple dictionary of common AI terms with a health and care context',
+          images: [
+            {
+              url: 'https://nhsx.github.io/open-source-imaging-data-sets/social-cover.png',
+              width: 1200,
+              height: 630,
+              alt: 'NHS Open Source Imaging Datasets Social Cover',
+              type: 'image/png',
+            }
+          ],
+        }}
+        twitter={{
+          handle: '@NHSuk',
+          site: '@NHSuk',
+          cardType: 'summary_large_image',
+        }}
+      />
+      <Component {...pageProps} />
+    </>
+  )
 }
