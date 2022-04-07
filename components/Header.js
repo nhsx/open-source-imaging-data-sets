@@ -16,11 +16,11 @@ export default function Header() {
                         </a>
                      </Link>
                   </div>
-                  <div className="pl-4"> 
-                     <Link href="/">
-                        <a className="flex flex-col flex-shrink-0 space-y-2 sm:space-y-0 sm:flex-row sm:items-center sm:space-x-2">
+                  <div className="pl-4">
+                     <Link href="https://www.nhsx.nhs.uk/ai-lab/">
+                        <a target="_blank" className="flex flex-col flex-shrink-0 space-y-2 sm:space-y-0 sm:flex-row sm:items-center sm:space-x-2">
                            <div>
-                              <img src={`${prefix}/nhs-logo.svg`} className="h-8 sm:h-10" alt="NHSX" />
+                              <img src={`${prefix}/nhs-logo.svg`} className="h-8 sm:h-10" alt="NHS AI Lab" />
                            </div>
                         </a>
                      </Link>
