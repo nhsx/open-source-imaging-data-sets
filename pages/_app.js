@@ -11,7 +11,7 @@ export default function MyApp({ Component, pageProps }) {
         openGraph={{
           url: 'https://nhsx.github.io/open-source-imaging-data-sets/',
           title: 'NIHR | NHS Open Source Imaging Datasets',
-          description: 'A simple dictionary of common AI terms with a health and care context',
+          description: 'A list of open source imaging datasets, maintained by the NIHR Imaging Group and the NHS AI Lab',
           images: [
             {
               url: 'https://nhsx.github.io/open-source-imaging-data-sets/social-cover.png',
